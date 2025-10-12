@@ -4,9 +4,9 @@ Twitch chatbot with functionality tailored to my specific needs
 
 Links:
 
-* [Bot channel](https://twitchbot.djdavid98.art)
-* [Authorization URL](https://twitchbot.djdavid98.art/authorize)
-* [Chat Overlay] Server URL: `https://twitchbot.djdavid98.art:8443`
+* [Bot channel](https://twitchbot.went.tf)
+* [Authorization URL](https://twitchbot.went.tf/authorize)
+* [Chat Overlay] Server URL: `https://twitchbot.went.tf:8443`
 
 [Chat Overlay]: https://github.com/WentTheFox/Beat-Saber-Overlay
 
