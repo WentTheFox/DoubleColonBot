@@ -1,7 +1,7 @@
 import { Logger } from '../model/logger';
 
 const sanitizeInitBeforeLog = (init: RequestInit): RequestInit => {
-  const clonedInit = structuredClone(init);
+  const clonedInit = JSON.parse(JSON.stringify(init)) as RequestInit;
   if (typeof clonedInit.headers === 'object' && 'authorization' in clonedInit.headers) {
     clonedInit.headers.authorization = clonedInit.headers.authorization.replace(/^([a-z]+ )(.*)$/i, (_, prefix, token) => {
       return prefix + '*'.repeat(token.length);

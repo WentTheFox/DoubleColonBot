@@ -5,7 +5,7 @@ import { Logger } from '../model/logger';
 export const databaseClientFactory = async (logger: Logger): Promise<Client> => new Promise((res, rej) => {
   const db = new pg.Client(env.DATABASE_URL);
 
-  db.connect(err => {
+  db.connect((err: unknown) => {
     if (err !== null) {
       logger.error('[Database] Connection failed');
       console.error(err);

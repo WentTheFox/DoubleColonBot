@@ -14,7 +14,7 @@ export const handleAccessTokenUpdate = async (deps: HandleAccessTokenUpdateDeps)
       statusCode: 500,
       log: {
         severity: 'error',
-        message: `Failed to validate access token: ${token.error.annotate()}`,
+        message: `Failed to validate access token: ${token.error?.annotate()}`,
       },
       body: 'Could not get an access token, please try again later.',
     };

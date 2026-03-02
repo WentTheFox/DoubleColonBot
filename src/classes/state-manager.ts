@@ -30,7 +30,7 @@ export class StateManager {
    */
   async validateState(logger: Logger, state: string): Promise<boolean> {
     logger.debug(`[StateManager] Validating state: ${state}…`);
-    const valid = await statesTable.deleteState(this.db, state).then(({ rowCount }) => rowCount > 0);
+    const valid = await statesTable.deleteState(this.db, state).then(({ rowCount }) => rowCount !== null && rowCount > 0);
     logger.debug(`[StateManager] State ${state} validation result: ${valid}`);
     return valid;
   }

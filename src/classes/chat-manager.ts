@@ -328,7 +328,7 @@ export class ChatManager {
         if (!params) {
           return reply(`Please provide a setting name (${validSettingNames.join(', ')}) and a value, separated by a space`);
         }
-        const isValidSettingName = (inputSetting: string): inputSetting is Exclude<keyof ChatSettings, typeof tables.chat_settings.primaryKey> => validSettingNames.includes(inputSetting as keyof ChatSettings);
+        const isValidSettingName = (inputSetting: string): inputSetting is Exclude<keyof ChatSettings, typeof tables.chat_settings.primaryKey> => validSettingNames.includes(inputSetting as never);
 
         const currentSettings = await chatSettingsTable.selectChatSetting(this.deps.db, username).then(({ rows }) => rows[0]);
 
@@ -443,7 +443,7 @@ export class ChatManager {
         const searchResponse = await fetchTwitchApiEndpoint(fetchTwitchApiParams, TwitchApiEndpoint.GET_SEARCH_CATEGORIES, { query }).then(r => r.json());
         const search = validateSearchCategories(searchResponse);
         if (!search.value || search.error) {
-          log.error(search.error.annotate());
+          log.error(search.error?.annotate() ?? 'Unknown error');
           return reply(`Could not search ${plural(name, true)}, please try again later`);
         }
 

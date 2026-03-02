@@ -35,7 +35,7 @@ export const updateUser = async (deps: UpdateUserDeps): Promise<JsonResponseProp
       statusCode: 500,
       log: {
         severity: 'error',
-        message: `Failed to retrieve users: ${users.error.annotate()}`,
+        message: `Failed to retrieve users: ${users.error?.annotate()}`,
       },
       body: 'Could not retrieve user information, please try again later.',
     };
