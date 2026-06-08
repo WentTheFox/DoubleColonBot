@@ -176,6 +176,10 @@ export class TwitchEventSubManager {
       });
       newConnection.addEventListener('close', (event) => {
         this.deps.logger('warn', `[TwitchEventSubManager] Connection closed: ${event.reason || 'Unknown reason'} (code: ${event.code})`);
+        if (newConnection === this.connection) {
+          this.keepaliveManager?.stop();
+          void this.reconnect();
+        }
       });
     });
   }

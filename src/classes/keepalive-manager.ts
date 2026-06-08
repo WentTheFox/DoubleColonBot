@@ -22,6 +22,12 @@ export class KeepaliveManager {
     this.resetTimer();
   }
 
+  stop() {
+    clearTimeout(this.timeoutClearToken);
+    this.timeoutClearToken = undefined;
+    this.onTimeout = undefined;
+  }
+
   resetTimer() {
     if (this.timeoutClearToken !== null) {
       clearTimeout(this.timeoutClearToken);

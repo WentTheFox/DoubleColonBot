@@ -116,7 +116,6 @@ const startTimeMs = performance.now();
     startTimeMs,
   });
 
-  await twitchEventSubManager.connect(startupLogger);
   try {
     const botInfo = await accessTokenManager.getBotInfo();
     await chatManager.connect(startupLogger, {
@@ -138,7 +137,10 @@ const startTimeMs = performance.now();
     process.exit(1);
     return;
   }
+  // Channels must be loaded before connecting to EventSub so subscribeToFollowEvents
+  // calls are queued and fire immediately on session_welcome, within Twitch's 10s window.
   await channelManager.updateChannels(startupLogger);
+  await twitchEventSubManager.connect(startupLogger);
 
   startupLogger.info('Bot started successfully');
   startupLogger.info(`To authenticate additional users, direct them to: ${getAuthStartUrl(publicHost)}`);
