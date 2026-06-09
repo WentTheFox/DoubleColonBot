@@ -57,11 +57,6 @@ const startTimeMs = performance.now();
     twitchEventSubManager = new TwitchEventSubManager({
       logger: startupLogger,
       getFetchTwitchApiParams,
-      getBroadcasterFetchParams: async (logger, broadcasterId) => {
-        const info = await accessTokenManager.getChannelToken(logger, 'id', broadcasterId);
-        if (!info) return undefined;
-        return { clientId, token: info.access_token, accessTokenManager, logger };
-      },
       getBotInfo: () => accessTokenManager.getBotInfo(),
     });
     accessTokenManager = new AccessTokenManager({
