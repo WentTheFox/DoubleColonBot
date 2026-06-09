@@ -34,6 +34,7 @@ export type FollowEventListener = AppEventListener<FollowEventPayload>;
 interface TwitchEventSubManagerParams {
   logger: Logger;
   getFetchTwitchApiParams: (logger: Logger) => Promise<FetchTwitchApiParams>;
+  getBroadcasterFetchParams: (logger: Logger, broadcasterId: string) => Promise<FetchTwitchApiParams | undefined>;
   getBotInfo: () => Promise<UserTokenInfo>;
 }
 
@@ -199,10 +200,14 @@ export class TwitchEventSubManager {
       }
 
       logger('info', `Creating new follow event subscription for broadcaster #${broadcasterId}…`);
-      const botInfo = await this.deps.getBotInfo();
-      const response = await fetchTwitchApiEndpoint(await this.deps.getFetchTwitchApiParams(logger), TwitchApiEndpoint.POST_FOLLOW_EVENTSUB_SUBSCRIPTION, {
+      const broadcasterFetchParams = await this.deps.getBroadcasterFetchParams(logger, broadcasterId);
+      if (!broadcasterFetchParams) {
+        logger('error', `No token available for broadcaster #${broadcasterId}, cannot subscribe to follow events`);
+        return value;
+      }
+      const response = await fetchTwitchApiEndpoint(broadcasterFetchParams, TwitchApiEndpoint.POST_FOLLOW_EVENTSUB_SUBSCRIPTION, {
         broadcaster_user_id: broadcasterId,
-        moderator_user_id: botInfo.id,
+        moderator_user_id: broadcasterId,
         session_id: sessionId,
       });
       if (!response.ok) {
