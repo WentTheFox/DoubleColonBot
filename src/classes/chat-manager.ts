@@ -62,19 +62,8 @@ export class ChatManager {
   constructor(private deps: ChatManagerDeps) {
     deps.channelManager.addListener(async newChannels => {
       deps.logger.debug('[ChatManager] channelManager listener called');
-      if (this.client) {
-        const currentChannels = this.client.getChannels().map((c) => normalizeChannelName(c));
 
-        const { joinChannels, partChannels } = calculateExpectedChannelsDiff(newChannels, currentChannels);
-        for (const joinChannel of joinChannels) {
-          await this.client.join(joinChannel.login);
-        }
-        for (const partChannel of partChannels) {
-          await this.client.part(partChannel);
-        }
-      }
-
-      // Do not wait for completion of the registrations but allow doing them in sequence
+      // Start EventSub subscriptions immediately so they aren't delayed by IRC joins below
       void (async () => {
         for (const updateData of newChannels) {
           const broadcasterId = updateData.id;
@@ -86,6 +75,18 @@ export class ChatManager {
           }
         }
       })();
+
+      if (this.client) {
+        const currentChannels = this.client.getChannels().map((c) => normalizeChannelName(c));
+
+        const { joinChannels, partChannels } = calculateExpectedChannelsDiff(newChannels, currentChannels);
+        for (const joinChannel of joinChannels) {
+          await this.client.join(joinChannel.login);
+        }
+        for (const partChannel of partChannels) {
+          await this.client.part(partChannel);
+        }
+      }
     });
     deps.twitchEventSubManager.addFollowEventListener(async (data) => {
       let total: number | undefined;

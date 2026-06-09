@@ -64,7 +64,7 @@ export class TwitchEventSubManager {
           this.reConnection = null;
         }
 
-        await this.processFollowEventsSubs(this.followEventSubscriptions);
+        this.followEventSubscriptions = await this.processFollowEventsSubs(this.followEventSubscriptions);
       },
       // eslint-disable-next-line unicorn/no-useless-undefined
       session_keepalive: () => undefined,
