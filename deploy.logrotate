@@ -1,0 +1,22 @@
+# Log rotation for git-deploy-toolkit: installed as /etc/logrotate.d/git-deploy-doublecolonbot on each deploy and
+# run by the nightly logrotate timer. See deploy.conf for the rest of the deploy setup.
+#
+# Retention: 14 days. This bot has no privacy policy that sets a log retention period, so this is the default
+# used for every app on the server. `daily` with `rotate 13` is what makes that "up to 14 days": the current
+# file holds at most one day and the 13 rotated ones the 13 days before it. Change it here if a policy is ever
+# written.
+#
+# These are the pm2 output files of the bot (pm2.json: out_file/error_file, merge_logs so pm2 doesn't
+# put the process id in the name). They are written as the deploy user, hence `su`, and pm2 keeps them open, so
+# copy and truncate instead of moving them.
+@WORKTREE@/logs/pm2-out.log
+@WORKTREE@/logs/pm2-error.log {
+    su pwny pwny
+    daily
+    rotate 13
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

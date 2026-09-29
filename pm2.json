@@ -3,7 +3,10 @@
     {
       "name": "DoubleColonBot",
       "script": "./build/index.js",
-      "log_date_format": "YYYY-MM-DD HH:mm:ss Z"
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "out_file": "logs/pm2-out.log",
+      "error_file": "logs/pm2-error.log",
+      "merge_logs": true
     }
   ]
 }
