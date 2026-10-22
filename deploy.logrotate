@@ -11,7 +11,7 @@
 # copy and truncate instead of moving them.
 @WORKTREE@/logs/pm2-out.log
 @WORKTREE@/logs/pm2-error.log {
-    su pwny pwny
+    su deploy deploy
     daily
     rotate 13
     missingok
