@@ -69,7 +69,11 @@ export class ChatManager {
           const broadcasterId = updateData.id;
           const requiredScopeForFollowEvents = READ_FOLLOWERS_SCOPE;
           if (Array.isArray(updateData.scope) && updateData.scope.includes(requiredScopeForFollowEvents)) {
-            await deps.twitchEventSubManager.subscribeToFollowEvents([{ broadcasterId }]);
+            try {
+              await deps.twitchEventSubManager.subscribeToFollowEvents([{ broadcasterId }]);
+            } catch (error) {
+              deps.logger.warn(`[ChatManager] Failed to subscribe to follow events for broadcaster #${broadcasterId}: ${getExceptionMessage(error)}`);
+            }
           } else {
             deps.logger.info(`[ChatManager] Missing ${requiredScopeForFollowEvents} from broadcaster #${broadcasterId}, not subscribing to follow events`);
           }
@@ -80,11 +84,21 @@ export class ChatManager {
         const currentChannels = this.client.getChannels().map((c) => normalizeChannelName(c));
 
         const { joinChannels, partChannels } = calculateExpectedChannelsDiff(newChannels, currentChannels);
+        // A channel that never answers JOIN/PART must not take down the process (or block the rest);
+        // failed joins are retried on the next channel update since the channel is still missing then
         for (const joinChannel of joinChannels) {
-          await this.client.join(joinChannel.login);
+          try {
+            await this.client.join(joinChannel.login);
+          } catch (error) {
+            deps.logger.warn(`[ChatManager] Failed to join #${joinChannel.login}: ${getExceptionMessage(error)}`);
+          }
         }
         for (const partChannel of partChannels) {
-          await this.client.part(partChannel);
+          try {
+            await this.client.part(partChannel);
+          } catch (error) {
+            deps.logger.warn(`[ChatManager] Failed to part #${partChannel}: ${getExceptionMessage(error)}`);
+          }
         }
       }
     });
@@ -113,7 +127,9 @@ export class ChatManager {
     log.debug('[ChatManager] Waiting for WS client connection…');
     this.client = new Client(options);
     this.client.on('chat', (channel: string, userState: ChatUserstate, message: string, self: boolean) => {
-      this.handleChat(channel, userState, message, self);
+      this.handleChat(channel, userState, message, self).catch((error) => {
+        this.deps.logger.warn(`[ChatManager] Failed to handle chat message in ${channel}: ${getExceptionMessage(error)}`);
+      });
     });
     this.client.on('clearchat', (channel) => {
       void this.deps.websocketManager.sendToRoom(normalizeChannelName(channel), 'clearChat');
