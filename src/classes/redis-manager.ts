@@ -22,6 +22,11 @@ export class RedisManager {
     logger('debug', `[RedisManager] Set ${key} to ${value} (expires in ${timeoutSeconds}s)`);
   }
 
+  async ping(): Promise<void> {
+    if (!this.client) throw this.getMissingClientError();
+    await this.client.ping();
+  }
+
   private getMissingClientError() {
     return new Error('Redis client has not been initialized');
   }

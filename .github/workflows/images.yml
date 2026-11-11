@@ -1,0 +1,95 @@
+name: Publish container image
+
+# Publishes ghcr.io/<owner>/doublecolonbot, multi-arch, for EVERY push to main, tagged <sha7> and sha-<sha7>. There are no
+# version tags, no `latest` and no git tags: the commit is the version. The sha-<sha7> tag is what Argo CD Image Updater
+# follows and is added as the very last registry step. Each architecture is built natively on its own runner, pushed as
+# <sha7>-<arch>, then merged into one multi-arch tag.
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ci-images-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  commitlint:
+    name: 'Lint commit messages'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Lint commits
+        uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6.2.1
+
+  build:
+    name: 'Build ${{ matrix.arch }}'
+    needs: commitlint
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Work out names and tags
+        id: meta
+        run: |
+          echo "tag=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/doublecolonbot:${GITHUB_SHA:0:7}-${{ matrix.arch }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tag }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.arch }},mode=max
+
+  publish:
+    name: 'Publish multi-arch tags'
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge per-arch images into one multi-arch tag
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/doublecolonbot"
+          sha="${GITHUB_SHA:0:7}"
+          docker buildx imagetools create -t "$repo:$sha" "$repo:$sha-amd64" "$repo:$sha-arm64"
+
+      # Last registry step: the tag Image Updater follows only appears once the multi-arch manifest list exists.
+      - name: Add sha- tag
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/doublecolonbot"
+          sha="${GITHUB_SHA:0:7}"
+          docker buildx imagetools inspect "$repo:$sha" > /dev/null
+          docker buildx imagetools create -t "$repo:sha-$sha" "$repo:$sha"

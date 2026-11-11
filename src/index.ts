@@ -21,6 +21,15 @@ extend(relativeTime);
 
 process.title = 'DoubleColonBot';
 
+// Kubernetes (and pm2) stop the bot with SIGTERM/SIGINT. Node's default would skip the 'exit' handlers that close the
+// database, EventSub and socket.io connections, so exit explicitly (the single instance must release them quickly).
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.once(signal, () => {
+    console.info(`Received ${signal}, shutting down…`);
+    process.exit(0);
+  });
+}
+
 const startTimeMs = performance.now();
 
 (async () => {
@@ -84,6 +93,7 @@ const startTimeMs = performance.now();
       botUsername,
       channelManager,
       twitchEventSubManager,
+      redisManager,
     });
     // Verify that we have the bot token on file
     await verifyBotAccessToken({

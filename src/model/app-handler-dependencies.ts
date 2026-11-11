@@ -3,6 +3,7 @@ import { Client } from 'pg';
 import { ChannelManager } from '../classes/channel-manager';
 import { TwitchEventSubManager } from '../classes/twitch-event-sub-manager';
 import { AccessTokenManager } from '../classes/access-token-manager';
+import { RedisManager } from '../classes/redis-manager';
 
 export interface AppHandlerDependencies {
   publicHost: string;
@@ -14,4 +15,5 @@ export interface AppHandlerDependencies {
   accessTokenManager: AccessTokenManager;
   channelManager: ChannelManager,
   twitchEventSubManager: TwitchEventSubManager,
+  redisManager: RedisManager,
 }
