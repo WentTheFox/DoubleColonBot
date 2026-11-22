@@ -1,7 +1,7 @@
 name: Publish container image
 
 # Publishes ghcr.io/<owner>/doublecolonbot, multi-arch, for EVERY push to main, tagged <sha7> and sha-<sha7>. There are no
-# version tags, no `latest` and no git tags: the commit is the version. The sha-<sha7> tag is what Argo CD Image Updater
+# version tags, no git tags (`latest` is a moving convenience tag, deployments pin sha-<sha7>): the commit is the version. The sha-<sha7> tag is what Argo CD Image Updater
 # follows and is added as the very last registry step. Each architecture is built natively on its own runner, pushed as
 # <sha7>-<arch>, then merged into one multi-arch tag.
 on:
@@ -92,4 +92,5 @@ jobs:
           repo="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/doublecolonbot"
           sha="${GITHUB_SHA:0:7}"
           docker buildx imagetools inspect "$repo:$sha" > /dev/null
+          docker buildx imagetools create -t "$repo:latest" "$repo:$sha"
           docker buildx imagetools create -t "$repo:sha-$sha" "$repo:$sha"
